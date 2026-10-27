@@ -1140,6 +1140,7 @@ html[lang=de] .tabbar.fit .tl{font-size:9px;letter-spacing:-.2px;padding:0 2px}
 .wready{margin:8px 0 8px 18px;display:grid;gap:4px}
 .wcopyta{width:100%;min-height:110px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;background:var(--paper);color:var(--ink);margin:6px 0 12px}
 .wqrprint{text-align:center}.wqrprint svg{width:260px;height:260px;margin:12px auto;display:block}
+
 </style>
 
 <div class="app">
@@ -1169,6 +1170,9 @@ const BUDGET=PRODUCT.id==='budget';
 const PROJ=PRODUCT.id==='projects';
 const TEACH=PRODUCT.id==='teacher';
 const WED=PRODUCT.id==='wedding';
+const LIFE=PRODUCT.id==='life';
+const LIFE_LISTS=['ltasks','llists','ldump','lroutines','lhabits','lzones','lchores','lpeople','lrecipes','lgrocery','lpantry','lwants','lmeds','lweight','lworkouts','lappts','lgoals','ljournal','ldopa','ldone'];
+const LIFE_MAPS=['lmeals','lroutlog','lhablog','lwater','lmedlog','lsleep','lmood','lenergy','lzonelog'];
 const KEY=PRODUCT.key;
 const DEMO_LIMIT=40;
 const CATS=[['flights','Flights'],['stays','Stays'],['food','Food'],['transport','Transport'],['tickets','Tickets'],['shopping','Shopping'],['other','Other']];
@@ -1326,11 +1330,12 @@ function guessHome(){
   try{const loc=new Intl.Locale((navigator.languages&&navigator.languages[0])||navigator.language||'en-US').maximize(), cc=loc.region&&G.countries[loc.region]?loc.region:'', cur=cc&&cCur(cc);
     return {cc,country:cc?cName(cc):'',cur:cur&&CURS.includes(cur)?cur:'USD'}}catch(e){return {cc:'',country:'',cur:'USD'}}
 }
-function blank(){const g=guessHome(); return {v:1,sample:false,settings:{name:'',home:g.cur,theme:'system',homeCode:'',country:g.country,simple:false,palette:PRODUCT.palette,money:true,extras:BUDGET||PROJ},trips:[],bookings:[],spends:[],places:[],days:[],todos:[],ideas:[],spots:[],tx:[],rec:[],goals:[],mbud:{},ucats:[],catEdits:{},taskDone:{},marks:{},cnotes:{},accounts:[],debts:[],dump:[],mnotes:{},projects:[],clients:[],tasks:[],recTasks:[],invoices:[],classes:[],students:[],lessons:[],units:[],standards:[],tgoals:[],assignments:[],tevents:[],beh:[],interv:[],contacts:[],people:[],terms:[],tnotes:[],att:{},sc:{},tt:{},seat:{},skips:{},supck:{},subn:{},wguests:[],wevents:[],wtasks:[],wcosts:[],wpays:[],wpayers:[],wvendors:[],wtl:[],wtables:[],wappts:[],wnotes:[],wapart:[],wlog:[],wreplies:[],wkit:[],wseat:{},wbplan:{}}}
+function blank(){const g=guessHome(), o=blankBase(g); if(LIFE){LIFE_LISTS.forEach(k=>{o[k]=[]}); LIFE_MAPS.forEach(k=>{o[k]={}})} return o}
+function blankBase(g){return {v:1,sample:false,settings:{name:'',home:g.cur,theme:'system',homeCode:'',country:g.country,simple:false,palette:PRODUCT.palette,money:true,extras:BUDGET||PROJ},trips:[],bookings:[],spends:[],places:[],days:[],todos:[],ideas:[],spots:[],tx:[],rec:[],goals:[],mbud:{},ucats:[],catEdits:{},taskDone:{},marks:{},cnotes:{},accounts:[],debts:[],dump:[],mnotes:{},projects:[],clients:[],tasks:[],recTasks:[],invoices:[],classes:[],students:[],lessons:[],units:[],standards:[],tgoals:[],assignments:[],tevents:[],beh:[],interv:[],contacts:[],people:[],terms:[],tnotes:[],att:{},sc:{},tt:{},seat:{},skips:{},supck:{},subn:{},wguests:[],wevents:[],wtasks:[],wcosts:[],wpays:[],wpayers:[],wvendors:[],wtl:[],wtables:[],wappts:[],wnotes:[],wapart:[],wlog:[],wreplies:[],wkit:[],wseat:{},wbplan:{}}}
 function load(){
   try{const raw=localStorage.getItem(KEY); if(raw){const d=JSON.parse(raw); if(d&&Array.isArray(d.trips)&&!d.sample) return normalize(d);}}catch(e){memoryOnly=true}
   // the example data is rebuilt each time, but keep the look and language the person picked
-  const sm=BUDGET?makeSampleB():PROJ?makeSampleP():TEACH?makeSampleT():WED?makeSampleW():makeSample();
+  const sm=BUDGET?makeSampleB():PROJ?makeSampleP():TEACH?makeSampleT():WED?makeSampleW():LIFE?makeSampleL():makeSample();
   try{const d=JSON.parse(localStorage.getItem(KEY)||'null'); if(d&&d.settings) ['lang','theme','palette'].forEach(k=>{if(d.settings[k]) sm.settings[k]=d.settings[k]})}catch(e){}
   return sm;
 }
@@ -1340,6 +1345,7 @@ function normalize(d){
   out.settings=Object.assign(blank().settings,d.settings||{});
   ['trips','bookings','spends','places','days','todos','ideas','spots','tx','rec','goals','ucats','accounts','debts','dump','projects','clients','tasks','recTasks','invoices','classes','students','lessons','units','standards','tgoals','assignments','tevents','beh','interv','contacts','people','terms','tnotes','wguests','wevents','wtasks','wcosts','wpays','wpayers','wvendors','wtl','wtables','wappts','wnotes','wapart','wlog','wreplies','wkit'].forEach(k=>{if(!Array.isArray(out[k])) out[k]=[]});
   ['att','sc','tt','seat','skips','supck','subn','wseat','wbplan'].forEach(k=>{if(!out[k]||typeof out[k]!=='object'||Array.isArray(out[k])) out[k]={}});
+  if(LIFE){LIFE_LISTS.forEach(k=>{if(!Array.isArray(out[k])) out[k]=[]}); LIFE_MAPS.forEach(k=>{if(!out[k]||typeof out[k]!=='object'||Array.isArray(out[k])) out[k]={}})}
   out.students.forEach(s=>{if(!Array.isArray(s.cls)) s.cls=s.cls?[s.cls]:[]; if(!Array.isArray(s.supports)) s.supports=[]});
   out.wguests.forEach(h=>{if(!Array.isArray(h.people)) h.people=[]; if(!Array.isArray(h.events)) h.events=[]; h.people.forEach(p=>{if(!p.att||typeof p.att!=='object') p.att={}})});
   if(!out.mnotes||typeof out.mnotes!=='object') out.mnotes={};
@@ -1564,6 +1570,7 @@ const V={tab:'today',trip:null,showHow:{},spendCat:'food',undo:null,confirm:null
 
 /* ---------- render shell ---------- */
 function renderNav(){
+  if(LIFE) return lifeRenderNav();
   const map={trip:'trips',map:'more',year:'more',settings:'more',cats:'more',memories:'more',spending:'more',income:'more',debt:'more',milestones:'more',dump:'more',timeline:'more',matrix:'more',pcal:'more',projects:'more',clients:'more',project:'board'};
   // in Projects these four live in the main menu, and a project page belongs to Projects
   if(PROJ) Object.assign(map,{timeline:'timeline',pcal:'pcal',projects:'projects',clients:'clients',project:'projects'});
@@ -1593,6 +1600,7 @@ function banner(){
   if(PROJ) return projBanner();
   if(TEACH) return teachBanner();
   if(WED) return wedBanner();
+  if(LIFE) return lifeBanner();
   if(!S.sample) return '';
   return `<div class="banner"><div><b>You're looking at example trips.</b><p>These belong to Mai, a made-up traveller. Try anything; nothing here is yours yet.</p></div>
   <div class="acts"><button class="btn small" data-act="start-own">Start my own</button>${syncUrl()?'<button class="btn small ghost" data-act="sync-recover">Get my numbers back</button>':''}</div></div>`;
@@ -1604,9 +1612,9 @@ function render(){
   S.trips.forEach(t=>{if(t.statusAuto&&t.status!=='done') t.status=deriveStatus(t)});
   renderNav();
   const v=document.getElementById('view');
-  const views=WED?{today:viewHomeW,wcheck:viewCheckW,wbudget:viewBudgetW,wpay:viewPaysW,wguests:viewGuestsW,whh:viewHouseW,wvend:viewVendorsW,wvd:viewVendorW,wday:viewDayW,more:viewMoreW,wcal:viewCalW,wpage:viewPageW,wevents:viewEventsW,wnotes:viewNotesW,settings:viewSettings}:TEACH?{today:viewTodayT,week:viewWeekT,classes:viewClassesT,cls:viewClassT,student:viewStudentT,attend:viewAttendT,grades:viewGradesT,tcal:viewCalT,more:viewMoreT,lessons:viewLessonsT,teach:viewTeachT,units:viewUnitsT,curric:viewCurricT,goals:viewGoalsT,behavior:viewBehaviorT,interv:viewIntervT,supports:viewSupportsT,birthdays:viewBirthdaysT,family:viewFamilyT,contacts:viewContactsT,tasks:viewTasksT,notes:viewNotesT,subplan:viewSubPlanT,share:viewShareT,search:viewSearchT,ttedit:viewTimetableT,settings:viewSettings}:PROJ?{today:viewTodayP,dash:viewDash,board:viewBoardP,money:viewMoneyP,more:viewMoreP,project:viewProjectP,projects:viewProjects,clients:viewClients,timeline:viewTimelineP,matrix:viewMatrixP,pcal:viewPCal,cats:viewCats,settings:viewSettings}:BUDGET?{today:viewTodayB,month:viewMonthB,bills:viewBills,goals:viewGoalsB,more:viewMoreB,spending:viewSpending,income:viewIncome,debt:viewDebt,milestones:viewMilestones,dump:viewDump,cats:viewCats,settings:viewSettings}:{today:viewToday,month:viewMonth,trips:viewTrips,trip:viewTrip,money:viewMoney,map:viewMap,year:viewYear,settings:viewSettings,more:viewMore,cats:viewCats,memories:viewMemories};
+  const views=LIFE?lifeViews():WED?{today:viewHomeW,wcheck:viewCheckW,wbudget:viewBudgetW,wpay:viewPaysW,wguests:viewGuestsW,whh:viewHouseW,wvend:viewVendorsW,wvd:viewVendorW,wday:viewDayW,more:viewMoreW,wcal:viewCalW,wpage:viewPageW,wevents:viewEventsW,wnotes:viewNotesW,settings:viewSettings}:TEACH?{today:viewTodayT,week:viewWeekT,classes:viewClassesT,cls:viewClassT,student:viewStudentT,attend:viewAttendT,grades:viewGradesT,tcal:viewCalT,more:viewMoreT,lessons:viewLessonsT,teach:viewTeachT,units:viewUnitsT,curric:viewCurricT,goals:viewGoalsT,behavior:viewBehaviorT,interv:viewIntervT,supports:viewSupportsT,birthdays:viewBirthdaysT,family:viewFamilyT,contacts:viewContactsT,tasks:viewTasksT,notes:viewNotesT,subplan:viewSubPlanT,share:viewShareT,search:viewSearchT,ttedit:viewTimetableT,settings:viewSettings}:PROJ?{today:viewTodayP,dash:viewDash,board:viewBoardP,money:viewMoneyP,more:viewMoreP,project:viewProjectP,projects:viewProjects,clients:viewClients,timeline:viewTimelineP,matrix:viewMatrixP,pcal:viewPCal,cats:viewCats,settings:viewSettings}:BUDGET?{today:viewTodayB,month:viewMonthB,bills:viewBills,goals:viewGoalsB,more:viewMoreB,spending:viewSpending,income:viewIncome,debt:viewDebt,milestones:viewMilestones,dump:viewDump,cats:viewCats,settings:viewSettings}:{today:viewToday,month:viewMonth,trips:viewTrips,trip:viewTrip,money:viewMoney,map:viewMap,year:viewYear,settings:viewSettings,more:viewMore,cats:viewCats,memories:viewMemories};
   v.innerHTML=demoBar()+(views[V.tab]||views.today||viewToday)();
-  v.classList.toggle('wide',PROJ&&['dash','board','project','timeline','pcal'].includes(V.tab)||TEACH&&['week','grades','tcal','attend','curric','cls','ttedit','teach'].includes(V.tab)||WED&&['wguests','wvend','wcal'].includes(V.tab));
+  v.classList.toggle('wide',PROJ&&['dash','board','project','timeline','pcal'].includes(V.tab)||TEACH&&['week','grades','tcal','attend','curric','cls','ttedit','teach'].includes(V.tab)||WED&&['wguests','wvend','wcal'].includes(V.tab)||LIFE&&lifeWide());
   applyTheme();
   if(v.querySelector('img[data-photo]')) loadPhotos();
   if(V.afterRender){const f=V.afterRender; V.afterRender=null; f()}
@@ -3232,24 +3240,24 @@ function viewSettings(){
   <div class="card"><span class="label">You</span>
     <form class="form" data-form="settings" novalidate><div class="fgrid">
       ${WED?'':`<div class="field"><label for="st-name">Your name</label><input type="text" id="st-name" name="name" value="${esc(s.name)}" placeholder="Shown on Today"></div>`}
-      ${TEACH?'':`<div class="field"><label for="st-home">${WED?'Currency':'Home currency'}</label><select id="st-home" name="home">${CURS.map(c=>`<option ${c===s.home?'selected':''}>${c}</option>`).join('')}</select><span class="hint">Budgets are kept in this currency. Changing it does not convert old amounts.</span></div>`}
-      ${BUDGET||PROJ||TEACH||WED?'':`<div class="field"><label for="st-code">Home airport code</label><input type="text" id="st-code" name="homeCode" maxlength="4" value="${esc(s.homeCode)}" placeholder="BKK"></div>`}
-      <div class="field"><label for="st-theme">Look</label><select id="st-theme" name="theme">${[['system','Match my device'],['light','Light'],['dark','Dark']].map(([k,n])=>`<option value="${k}" ${k===s.theme?'selected':''}>${n}</option>`).join('')}</select></div>
+      ${TEACH?'':`<div class="field"><label for="st-home">${WED||LIFE?'Currency':'Home currency'}</label><select id="st-home" name="home">${CURS.map(c=>`<option ${c===s.home?'selected':''}>${c}</option>`).join('')}</select><span class="hint">Budgets are kept in this currency. Changing it does not convert old amounts.</span></div>`}
+      ${BUDGET||PROJ||TEACH||WED||LIFE?'':`<div class="field"><label for="st-code">Home airport code</label><input type="text" id="st-code" name="homeCode" maxlength="4" value="${esc(s.homeCode)}" placeholder="BKK"></div>`}
+      <div class="field"><label for="st-theme">${LIFE?'Light or dark':'Look'}</label><select id="st-theme" name="theme">${[['system','Match my device'],['light','Light'],['dark','Dark']].map(([k,n])=>`<option value="${k}" ${k===s.theme?'selected':''}>${n}</option>`).join('')}</select></div>
       <div class="field"><label for="st-lang">Language</label><select id="st-lang">${[['','Match my device'],...LANGS].map(([k,n])=>`<option value="${k}" ${k===(s.lang||'')?'selected':''}>${n}</option>`).join('')}</select></div>
-      ${TEACH||WED?'':`<div class="field"><label for="st-country">Home country</label><input type="text" id="st-country" name="country" list="countrylist" value="${esc(s.country)}" placeholder="United States of America" autocomplete="off">${TEACH?'':'<span class="hint" id="st-country-hint">Your currency follows your country.</span>'}${BUDGET||PROJ||TEACH?'':'<span class="hint">Used to remind you about passports for trips abroad.</span>'}</div>`}
-      ${TEACH||WED?'':`<div class="field"><label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px;margin-top:22px"><input type="checkbox" id="st-extras" name="extras" ${s.extras?'checked':''}> Show extra details</label><span class="hint">${PROJ?'Time logged and priority labels on task cards.':BUDGET?'Debt, milestones and money in on the More page.':'Budgets by kind, day-by-day charts, monthly limits and city pins.'}</span></div>`}
-      ${BUDGET||PROJ||TEACH||WED?'':`<div class="field"><label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px;margin-top:22px"><input type="checkbox" id="st-money" name="money" ${s.money!==false?'checked':''}> Everyday money</label><span class="hint">Income, spending, regular bills and goals. Turn off to use Stampbook for trips only.</span></div>`}
-      <fieldset style="grid-column:1/-1"><legend class="label">Colour</legend><div class="swatches">${PALETTES.map(([k,n])=>`<label><input type="radio" name="palette" value="${k}" ${k===(s.palette||'coral')?'checked':''}><i style="background:${({coral:'#8E3B52',rose:'#C2507E',sage:'#4F8A6B',ocean:'#2F7FA8',plum:'#7A62B8',amber:'#B8741A',leaf:'#3F6B57',post:'#2F5F8A',apple:'#B4472E',mauve:'#7D5A86'})[k]}"></i>${n}</label>`).join('')}</div></fieldset>
+      ${TEACH||WED||LIFE?'':`<div class="field"><label for="st-country">Home country</label><input type="text" id="st-country" name="country" list="countrylist" value="${esc(s.country)}" placeholder="United States of America" autocomplete="off">${TEACH?'':'<span class="hint" id="st-country-hint">Your currency follows your country.</span>'}${BUDGET||PROJ||TEACH?'':'<span class="hint">Used to remind you about passports for trips abroad.</span>'}</div>`}
+      ${TEACH||WED||LIFE?'':`<div class="field"><label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px;margin-top:22px"><input type="checkbox" id="st-extras" name="extras" ${s.extras?'checked':''}> Show extra details</label><span class="hint">${PROJ?'Time logged and priority labels on task cards.':BUDGET?'Debt, milestones and money in on the More page.':'Budgets by kind, day-by-day charts, monthly limits and city pins.'}</span></div>`}
+      ${BUDGET||PROJ||TEACH||WED||LIFE?'':`<div class="field"><label style="display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px;margin-top:22px"><input type="checkbox" id="st-money" name="money" ${s.money!==false?'checked':''}> Everyday money</label><span class="hint">Income, spending, regular bills and goals. Turn off to use Stampbook for trips only.</span></div>`}
+      ${LIFE?'':`<fieldset style="grid-column:1/-1"><legend class="label">Colour</legend><div class="swatches">${PALETTES.map(([k,n])=>`<label><input type="radio" name="palette" value="${k}" ${k===(s.palette||'coral')?'checked':''}><i style="background:${({coral:'#8E3B52',rose:'#C2507E',sage:'#4F8A6B',ocean:'#2F7FA8',plum:'#7A62B8',amber:'#B8741A',leaf:'#3F6B57',post:'#2F5F8A',apple:'#B4472E',mauve:'#7D5A86'})[k]}"></i>${n}</label>`).join('')}</div></fieldset>`}
     </div><div class="row-end"><button class="btn" type="submit">Save</button></div></form></div>
-  ${WED?wSettingsCard():''}${BUDGET?budgetSettingsCard():''}${TEACH?tSettingsCard():''}
+  ${WED?wSettingsCard():''}${LIFE?lifeSettingsCard():''}${BUDGET?budgetSettingsCard():''}${TEACH?tSettingsCard():''}
   ${syncUrl()?`<div class="card" data-sync-card>${syncCard()}</div>`:''}
   <div class="card bkcard"><span class="label">Backup file</span>
-    <p class="muted" style="font-size:14px">${WED?'A backup is one file with your whole wedding: guests, budget, vendors, the checklist and settings.':TEACH?'A backup is one file with all your classes, students, lessons, grades, attendance and settings.':PROJ?'A backup is one file with all your projects, tasks, clients, invoices and settings.':BUDGET?'A backup is one file with all your balances, bills, goals and settings.':'A backup is one file with all your trips, money and settings.'} Keep it somewhere safe, like Files, iCloud Drive or Google Drive.</p>
+    <p class="muted" style="font-size:14px">${LIFE?'A backup is one file with your whole planner: tasks, routines, meals, money, health and settings.':WED?'A backup is one file with your whole wedding: guests, budget, vendors, the checklist and settings.':TEACH?'A backup is one file with all your classes, students, lessons, grades, attendance and settings.':PROJ?'A backup is one file with all your projects, tasks, clients, invoices and settings.':BUDGET?'A backup is one file with all your balances, bills, goals and settings.':'A backup is one file with all your trips, money and settings.'} Keep it somewhere safe, like Files, iCloud Drive or Google Drive.</p>
     ${needsInstall()?`<div class="note warn"><b>This copy is open in Safari.</b><p>Safari deletes a website’s saved data after about a week of not opening it. Adding ${PRODUCT.name} to your ${isIOS?'Home Screen':'Dock'} stops that.</p><button class="btn small ghost" data-act="care-install">Show me how</button></div>`:''}
     <p class="bkstatus">${(c=>c.lastBackup?'✓ Last backup downloaded '+fmtShort(isoOf(new Date(c.lastBackup)))+'.':'You have not downloaded a backup yet.')(lsGet(CARE,{}))}</p>
     <div class="bksteps">
       <div class="bkstep"><b>Save a backup</b><span>Downloads one file. Do it now and then, and before you change phones.</span>
-        ${BUDGET||PROJ||TEACH||WED?'':'<label class="bkcheck"><input type="checkbox" id="bk-photos"> Include photos (bigger file)</label>'}
+        ${BUDGET||PROJ||TEACH||WED||LIFE?'':'<label class="bkcheck"><input type="checkbox" id="bk-photos"> Include photos (bigger file)</label>'}
         <button class="btn coral" data-act="dl-json">Download backup</button></div>
       <div class="bkstep"><b>Bring a backup back</b><span>On this or a new device, choose your backup file. It replaces what is here now.</span>
         <label class="btn ghost" for="imp-file" tabindex="0">Restore from a file</label><input type="file" id="imp-file" accept=".json,application/json" hidden>
@@ -3258,7 +3266,7 @@ function viewSettings(){
     <details class="bkmore"><summary class="linkbtn">Other ways</summary>
       <div class="form" style="margin-top:12px">
         <p class="muted" style="font-size:14px">If a download does not start, copy the backup as text and paste it into a note.</p>
-        <div class="row-end" style="justify-content:flex-start"><button class="btn ghost small" data-act="copy-json">Copy backup text</button>${PROJ||TEACH||WED?'':'<button class="btn ghost small" data-act="dl-csv">Spending for spreadsheets (CSV)</button>'}</div>
+        <div class="row-end" style="justify-content:flex-start"><button class="btn ghost small" data-act="copy-json">Copy backup text</button>${PROJ||TEACH||WED||LIFE?'':'<button class="btn ghost small" data-act="dl-csv">Spending for spreadsheets (CSV)</button>'}</div>
         <div class="field"><label for="imp-text">Paste backup text</label><textarea id="imp-text" placeholder='{"v":1, ...}'></textarea></div>
         <div class="row-end" style="justify-content:flex-start"><button class="btn ghost small" data-act="import-text">Restore pasted backup</button></div>
       </div>
@@ -3267,7 +3275,7 @@ function viewSettings(){
   <div class="card"><span class="label">Start over</span>
     <div class="row-end" style="justify-content:flex-start">
       <button class="btn ghost" data-act="start-own">Start my own (empty)</button>
-      <button class="btn ghost" data-act="load-sample">${WED?'Load the example wedding':TEACH?'Load example classes':PROJ?'Load example projects':BUDGET?'Load example budget':'Load example trips'}</button>
+      <button class="btn ghost" data-act="load-sample">${LIFE?'Load the example planner':WED?'Load the example wedding':TEACH?'Load example classes':PROJ?'Load example projects':BUDGET?'Load example budget':'Load example trips'}</button>
       <button class="btn ${V.confirm==='wipe'?'danger':'ghost'}" data-act="wipe">${V.confirm==='wipe'?'Tap again to erase everything':'Erase everything'}</button>
     </div></div>
   <p class="muted" style="font-size:12px">${PRODUCT.name}${PRODUCT.demo?' demo':''} v1.0</p>`;
@@ -3354,7 +3362,7 @@ function toast(msg,undo){
   clearTimeout(toast.t); toast.t=setTimeout(()=>{el.hidden=true; V.undo=null},5000);
 }
 function snapshot(){return JSON.stringify(S)}
-function commit(msg,undoSnap){if(WED) wAfter(msg); save(); render(); if(msg) toast(msg,!!undoSnap); if(undoSnap) V.undo=undoSnap}
+function commit(msg,undoSnap){if(WED) wAfter(msg); if(LIFE) lifeAfter(msg); save(); render(); if(msg) toast(msg,!!undoSnap); if(undoSnap) V.undo=undoSnap}
 // in the free demo, changing the example still counts as playing with it, so the tour stays
 function leaveSample(){ if(S.sample){S.sample=false; if(PRODUCT.demo) S.demoEx=true} }
 const inFrame=(()=>{try{return window.self!==window.top}catch(e){return true}})();
@@ -3427,6 +3435,7 @@ document.addEventListener('click',e=>{
   if(PROJ&&projAct(act,b,id)) return;
   if(TEACH&&teachAct(act,b,id)) return;
   if(WED&&wedAct(act,b,id)) return;
+  if(LIFE&&lifeAct(act,b,id)) return;
   switch(act){
     case 'close': closeDlg(); break;
     case 'new-trip': tripForm(null); break;
@@ -3612,6 +3621,7 @@ document.addEventListener('submit',e=>{
   if(PROJ&&projSubmit(kind,f,fd,val,fail)) return;
   if(TEACH&&teachSubmit(kind,f,fd,val,fail)) return;
   if(WED&&wedSubmit(kind,f,fd,val,fail)) return;
+  if(LIFE&&lifeSubmit(kind,f,fd,val,fail)) return;
   if(kind==='sync-join'){joinSubmit(val('code')).then(m=>{if(m) fail(m)}); return}
   if(kind==='sync-recover'){const k=cleanSecret(val('key')); if(!k) return fail('That key is not complete. It has 20 letters and numbers, like ABCDE-FGHJK-MNPQR-STVWX.'); recoverWith(k); return}
   if(kind==='trip'){
@@ -3892,7 +3902,7 @@ function applyTheme(){
 const SYNC_URL_DEFAULT='https://stampbook-sync.tharit-c1999.workers.dev';   // the deployed Cloudflare worker
 // the server only answers the app's own site, so the claude.ai preview (a frame) shows no sync buttons
 const syncUrl=()=>{if(PRODUCT.demo||window.self!==window.top) return ''; try{return localStorage.getItem('stampbook.syncurl')||SYNC_URL_DEFAULT}catch(e){return SYNC_URL_DEFAULT}};
-const SKP=BUDGET?'stampbook-budget':PROJ?'stampbook-projects':TEACH?'stampbook-teacher':WED?'stampbook-wedding':'stampbook', SK=SKP+'.sync', SKB=SKP+'.sync.base', SKC=SKP+'.sync.conflicts', CARE=SKP+'.care';
+const SKP=BUDGET?'stampbook-budget':PROJ?'stampbook-projects':TEACH?'stampbook-teacher':WED?'stampbook-wedding':LIFE?'stampbook-life':'stampbook', SK=SKP+'.sync', SKB=SKP+'.sync.base', SKC=SKP+'.sync.conflicts', CARE=SKP+'.care';
 const lsGet=(k,d)=>{try{const v=localStorage.getItem(k); return v?JSON.parse(v):d}catch(e){return d}};
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let SY=lsGet(SK,null), VK=null, SYNC_QUIET=false, syncBusy=null, syncAgain=false, pushTimer=null;
@@ -3928,8 +3938,8 @@ async function api(method,path,body,raw){
 }
 
 /* three-way merge, one record at a time: nothing is erased when both devices changed something */
-const SYNC_LISTS=['trips','bookings','spends','places','days','todos','ideas','spots','tx','rec','goals','ucats','accounts','debts','dump','projects','clients','tasks','recTasks','invoices','classes','students','lessons','units','standards','tgoals','assignments','tevents','beh','interv','contacts','people','terms','tnotes','wguests','wevents','wtasks','wcosts','wpays','wpayers','wvendors','wtl','wtables','wappts','wnotes','wapart','wlog','wreplies','wkit'];
-const SYNC_MAPS=['settings','mbud','catEdits','taskDone','marks','cnotes','mnotes','att','sc','tt','seat','skips','supck','subn','wseat','wbplan'];
+const SYNC_LISTS=['trips','bookings','spends','places','days','todos','ideas','spots','tx','rec','goals','ucats','accounts','debts','dump','projects','clients','tasks','recTasks','invoices','classes','students','lessons','units','standards','tgoals','assignments','tevents','beh','interv','contacts','people','terms','tnotes','wguests','wevents','wtasks','wcosts','wpays','wpayers','wvendors','wtl','wtables','wappts','wnotes','wapart','wlog','wreplies','wkit'].concat(LIFE?LIFE_LISTS:[]);
+const SYNC_MAPS=['settings','mbud','catEdits','taskDone','marks','cnotes','mnotes','att','sc','tt','seat','skips','supck','subn','wseat','wbplan'].concat(LIFE?LIFE_MAPS:[]);
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const comparable=s=>JSON.stringify(s,(k,v)=>k==='lang'||k==='sample'?undefined:v);
 function merge3(base,local,remote){
@@ -3962,7 +3972,7 @@ function merge3(base,local,remote){
 }
 function addConflicts(list){const cur=lsGet(SKC,[]); list.forEach(c=>{const i=cur.findIndex(x=>x.k===c.k&&x.id===c.id); if(i>=0) cur[i]=c; else cur.push(c)}); lsSet(SKC,cur)}
 function conflictLabel(c){
-  const v=c.local||c.remote||{}, names={trips:'Trip',bookings:'Booking',spends:'Trip spending',places:'Pin',days:'Day plan',todos:'To-do',spots:'Place',tx:'Money',rec:'Regular bill or pay',goals:'Goal',ucats:'Category',settings:'Setting',mbud:'Monthly limit',cnotes:'Country note',classes:'Class',students:'Student',lessons:'Lesson',units:'Unit',assignments:'Assignment',tevents:'Event',beh:'Student note',interv:'Support plan',contacts:'Family contact',tasks:'To-do',tnotes:'Note',att:'Attendance',sc:'Grades',tt:'Timetable',seat:'Seating chart',wguests:'Guests',wevents:'Event',wtasks:'Task',wcosts:'Cost',wpays:'Payment',wpayers:'Who’s paying',wvendors:'Vendor',wtl:'Day-of item',wtables:'Table',wappts:'Appointment',wnotes:'Note',wapart:'Keep-apart rule',wkit:'Kit item',wseat:'Seating',wbplan:'Budget plan'};
+  const v=c.local||c.remote||{}, names={ltasks:'Task',lroutines:'Routine',lhabits:'Habit',lrecipes:'Recipe',lgrocery:'Shopping item',lchores:'Chore',lappts:'Appointment',lgoals:'Goal',ljournal:'Journal entry',trips:'Trip',bookings:'Booking',spends:'Trip spending',places:'Pin',days:'Day plan',todos:'To-do',spots:'Place',tx:'Money',rec:'Regular bill or pay',goals:'Goal',ucats:'Category',settings:'Setting',mbud:'Monthly limit',cnotes:'Country note',classes:'Class',students:'Student',lessons:'Lesson',units:'Unit',assignments:'Assignment',tevents:'Event',beh:'Student note',interv:'Support plan',contacts:'Family contact',tasks:'To-do',tnotes:'Note',att:'Attendance',sc:'Grades',tt:'Timetable',seat:'Seating chart',wguests:'Guests',wevents:'Event',wtasks:'Task',wcosts:'Cost',wpays:'Payment',wpayers:'Who’s paying',wvendors:'Vendor',wtl:'Day-of item',wtables:'Table',wappts:'Appointment',wnotes:'Note',wapart:'Keep-apart rule',wkit:'Kit item',wseat:'Seating',wbplan:'Budget plan'};
   const what=typeof v==='object'?(v.name||v.label||v.title||v.text||v.note||(v.amount!=null?String(v.amount):'')):String(c.id);
   return `${names[c.k]||c.k}: ${what||c.id}`;
 }
@@ -4069,9 +4079,9 @@ async function pairAllow(){
   }catch(e){dlgFail(e,'Connect another device')}
 }
 async function pairDeny(){try{if(PAIR) await api('POST','/pair/'+PAIR.code+'/deny')}catch(e){} PAIR=null; closeDlg(); toast('The other device was not allowed')}
-const hasOwnData=()=>!S.sample&&(S.trips.length+S.tx.length+S.goals.length+S.projects.length+S.tasks.length+S.classes.length+S.students.length+S.wguests.length+S.wcosts.length+S.wvendors.length)>0;
+const hasOwnData=()=>!S.sample&&(S.trips.length+S.tx.length+S.goals.length+S.projects.length+S.tasks.length+S.classes.length+S.students.length+S.wguests.length+S.wcosts.length+S.wvendors.length+(S.ltasks||[]).length+(S.lroutines||[]).length+(S.lrecipes||[]).length)>0;
 // the button that brings a synced planner back; teachers keep classes, not numbers
-const RECOVER=TEACH||WED?'Get my planner back':'Get my numbers back';
+const RECOVER=TEACH||WED||LIFE?'Get my planner back':'Get my numbers back';
 const replaceWarn=what=>hasOwnData()?`<div class="note warn"><p>This device already has a planner. ${what} will replace it. Download a backup first if you want to keep this copy.</p><button class="btn small ghost" data-act="dl-json">Download a backup</button></div>`:'';
 function joinStart(){
   if(!needSyncReady()) return;
@@ -4124,7 +4134,7 @@ async function recoveryStart(){
 function showKey(fresh){
   if(!SY) return;
   openDlg(dlgHead(fresh?'Recovery copy is on':'Your recovery copy','Keep this key somewhere you will find it.')+`<p class="keybig num" data-key aria-label="Recovery key">${fmtSecret(SY.secret).split('-').map(g=>`<span>${g}</span>`).join('<i>-</i>')}</p>
-    <p class="muted" style="font-size:14px">${TEACH||WED?'Your planner is encrypted before it leaves this device. Only this key opens it: nobody at the shop can read it, and nobody can bring it back without the key. Save it in Notes, a password app or a screenshot.':'Your numbers are encrypted before they leave this device. Only this key opens them: nobody at the shop can read them, and nobody can bring them back without it. Save it in Notes, a password app or a screenshot.'}</p>
+    <p class="muted" style="font-size:14px">${TEACH||WED||LIFE?'Your planner is encrypted before it leaves this device. Only this key opens it: nobody at the shop can read it, and nobody can bring it back without the key. Save it in Notes, a password app or a screenshot.':'Your numbers are encrypted before they leave this device. Only this key opens them: nobody at the shop can read them, and nobody can bring them back without it. Save it in Notes, a password app or a screenshot.'}</p>
     <div class="row-end"><button class="btn ghost" data-act="sync-copy-key">Copy</button>${navigator.share?'<button class="btn ghost" data-act="sync-share-key">Share</button>':''}<button class="btn coral" data-act="close">I've saved it</button></div>`);
 }
 async function prfOut(cred){const r=cred.getClientExtensionResults&&cred.getClientExtensionResults(); return r&&r.prf&&r.prf.results&&r.prf.results.first}
@@ -4153,7 +4163,7 @@ async function passkeyRecover(){
 }
 function recoverStart(){
   if(!needSyncReady()) return;
-  openDlg(dlgHead(RECOVER,'Bring your planner back onto this device.')+`${replaceWarn(TEACH||WED?'Getting your planner back':'Getting your numbers back')}
+  openDlg(dlgHead(RECOVER,'Bring your planner back onto this device.')+`${replaceWarn(TEACH||WED||LIFE?'Getting your planner back':'Getting your numbers back')}
     ${passkeyPossible()?'<div class="row-end" style="justify-content:flex-start"><button class="btn coral" data-act="sync-recover-pass">Use my passkey</button></div><p class="muted" style="font-size:14px">Or type your key:</p>':''}
     <form class="form" data-form="sync-recover" novalidate><div class="field"><label for="sync-key">Recovery key</label><input class="codein keyin" id="sync-key" name="key" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="ABCDE-FGHJK-MNPQR-STVWX"></div>
     <p class="muted" style="font-size:13px">The 20-character key Stampbook showed you. Dashes and capitals do not matter. No key? A backup file works too: More → Settings → Restore from a backup file.</p>
@@ -4162,7 +4172,7 @@ function recoverStart(){
 async function recoverWith(secret){
   dlgWait(RECOVER,'Finding your copy…','Opening it on this device.');
   try{await joinVault(secret);
-    openDlg(dlgHead('Welcome back','Everything is back on this device.')+`<p>${TEACH||WED?'Your planner is here again, and this device stays connected to your recovery copy, so future changes are kept too.':'Your numbers are here again, and this device stays connected to your recovery copy, so future changes are kept too.'}</p><div class="row-end"><button class="btn coral" data-act="close">Done</button></div>`);
+    openDlg(dlgHead('Welcome back','Everything is back on this device.')+`<p>${TEACH||WED||LIFE?'Your planner is here again, and this device stays connected to your recovery copy, so future changes are kept too.':'Your numbers are here again, and this device stays connected to your recovery copy, so future changes are kept too.'}</p><div class="row-end"><button class="btn coral" data-act="close">Done</button></div>`);
   }catch(e){dlgFail(e,RECOVER)}
 }
 
@@ -4180,8 +4190,8 @@ function careCards(){
   const c=lsGet(CARE,{}), now=Date.now();
   if(needsInstall()&&!(c.installLater>now)) return `<div class="card care"><div><b>This copy is open in Safari.</b><p class="muted">Safari deletes a website’s saved data after about a week of not opening it. Adding ${PRODUCT.name} to your ${isIOS?'Home Screen':'Dock'} stops that.</p></div>
     <div class="row-end" style="justify-content:flex-start"><button class="btn small coral" data-act="care-install">Show me how</button><button class="btn small ghost" data-act="care-later" data-k="installLater">Later</button></div></div>`;
-  const enough=!S.sample&&(S.trips.length+S.tx.length+S.tasks.length+S.students.length+S.wguests.length+S.wcosts.length)>=5;
-  if(enough&&!syncOn()&&(!c.lastBackup||now-c.lastBackup>30*864e5)&&!(c.backupLater>now)) return `<div class="card care"><div><b>${c.lastBackup?'Time for a fresh backup':'Keep your planner safe'}</b><p class="muted">${BUDGET?'Your budget lives in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.':TEACH?'Your classes live in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.':PROJ?'Your projects live in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.':WED?'Your wedding plan lives in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.':'Your trips live in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.'}</p></div>
+  const enough=!S.sample&&(S.trips.length+S.tx.length+S.tasks.length+S.students.length+S.wguests.length+S.wcosts.length+(S.ltasks||[]).length)>=5;
+  if(enough&&!syncOn()&&(!c.lastBackup||now-c.lastBackup>30*864e5)&&!(c.backupLater>now)) return `<div class="card care"><div><b>${c.lastBackup?'Time for a fresh backup':'Keep your planner safe'}</b><p class="muted">${BUDGET?'Your budget lives in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.':TEACH?'Your classes live in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.':PROJ?'Your projects live in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.':LIFE?'Your planner lives in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.':WED?'Your wedding plan lives in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.':'Your trips live in this browser, and a browser can clear its storage. Keep an encrypted recovery copy, or download a backup file.'}</p></div>
     <div class="row-end" style="justify-content:flex-start">${syncUrl()?'<button class="btn small coral" data-act="sync-recovery">Keep a recovery copy</button>':''}<button class="btn small ${syncUrl()?'ghost':'coral'}" data-act="dl-json">Download a backup</button><button class="btn small ghost" data-act="care-later" data-k="backupLater">Later</button></div></div>`;
   return '';
 }
@@ -4195,7 +4205,7 @@ function syncCard(){
   if(!syncOn()) return `<div class="card-head"><span class="label">Your devices</span><span class="syncpill" data-state="off">Off</span></div>
     <h3 class="synch">Use it on your iPhone, iPad and computer</h3>
     <p class="muted" style="font-size:14px">Optional. Stampbook already saves on this device. Turn on syncing only if you want the same planner on another device.</p>
-    <p class="note">${TEACH||WED?'Your planner is scrambled on this device before it goes anywhere, so nobody in between can read it, not even us. No email, no password, no subscription.':'Your numbers are scrambled on this device before they go anywhere, so nobody in between can read them, not even us. No email, no password, no subscription.'}</p>
+    <p class="note">${TEACH||WED||LIFE?'Your planner is scrambled on this device before it goes anywhere, so nobody in between can read it, not even us. No email, no password, no subscription.':'Your numbers are scrambled on this device before they go anywhere, so nobody in between can read them, not even us. No email, no password, no subscription.'}</p>
     <div class="row-end" style="justify-content:flex-start"><button class="btn coral" data-act="sync-pair">Use on another device</button><button class="btn ghost" data-act="sync-join">Connect this device</button></div>
     <div class="row-end" style="justify-content:flex-start"><button class="linkbtn" data-act="sync-recovery">Keep a recovery copy</button><button class="linkbtn" data-act="sync-recover">${RECOVER}</button></div>`;
   return `<div class="card-head"><span class="label">Your devices</span><span class="syncpill" data-state="${conf.length?'conflict':st}">${pill}${st==='synced'||st==='idle'?ago:''}</span></div>
@@ -4284,6 +4294,14 @@ function userTokens(){
     S.wvendors.forEach(v=>{add(v.name);add(v.contact);add(v.inc);add(v.dep);add(v.extra);add(v.cancel);add(v.notes)}); S.wcosts.forEach(c=>{add(c.name);add(c.notes)}); S.wpayers.forEach(p=>add(p.name)); S.wtables.forEach(t=>add(t.name));
     S.wappts.forEach(a=>{add(a.title);add(a.place)}); S.wnotes.forEach(n=>{add(n.title);add(n.text)}); S.wevents.forEach(e=>{if(!['Ceremony','Reception','Welcome drinks'].includes(e.name)) add(e.name); add(e.place)});
     S.wtasks.forEach(t=>{if(t.off==null) add(t.title); add(t.note); add(t.helper)}); S.wtl.forEach(t=>{if(!WTL0.some(x=>x[1]===t.title)) add(t.title); add(t.place); add(t.who); add(t.note)}); (S.wkit||[]).forEach(k=>{if(!WKIT.includes(k.t)) add(k.t)})}
+  // Life Planner: whatever the person typed stays as typed; the ready-made routines, zones, recipes and menu stay translatable
+  if(LIFE){const tpl=lTplWords(), addU=v=>{if(!tpl.has(String(v||'').trim())) add(v)};
+    add(S.settings.name); add(lS().jar.reward); S.ltasks.forEach(t=>{addU(t.title);add(t.notes);(t.steps||[]).forEach(s=>addU(s.t))}); S.llists.forEach(l=>addU(l.name)); S.ldump.forEach(d=>add(d.t));
+    S.lroutines.forEach(r=>{addU(r.name);(r.steps||[]).forEach(s=>addU(s.t))}); S.lhabits.forEach(h=>addU(h.name)); S.lzones.forEach(z=>{addU(z.name);(z.jobs||[]).forEach(j=>addU(j.t))});
+    S.lchores.forEach(c=>add(c.title)); S.lpeople.forEach(p=>add(p.name)); S.lrecipes.forEach(r=>{addU(r.name);(r.ings||[]).forEach(i=>addU(i.t));(r.tags||[]).forEach(addU);add(r.how)});
+    S.lgrocery.forEach(g=>addU(g.t)); S.lpantry.forEach(p=>add(p.t)); S.lwants.forEach(w=>add(w.t)); S.lmeds.forEach(m=>add(m.name)); S.lworkouts.forEach(w=>add(w.kind));
+    S.lappts.forEach(a=>{add(a.title);add(a.place);add(a.notes)}); S.lgoals.forEach(g=>{add(g.title);add(g.why);(g.steps||[]).forEach(s=>add(s.t))}); S.ljournal.forEach(j=>{add(j.text);(j.wins||[]).forEach(add)});
+    S.ldopa.forEach(x=>addU(x.t)); S.ldone.forEach(x=>addU(x.title)); Object.values(S.lmeals).forEach(m=>{if(m&&m.t) addU(m.t)}); S.rec.forEach(r=>add(r.label)); S.tx.forEach(x=>add(x.note)); S.goals.forEach(g=>add(g.name)); S.debts.forEach(d=>add(d.name))}
   // Teacher Planner: class, student and lesson names stay as they are inside translated sentences
   if(TEACH){S.classes.forEach(x=>{add(x.name);add(x.subject)}); S.students.forEach(s=>{add(s.first);add(s.last);add(tName(s));add(tName(s,true));add((s.first||'')+' '+(s.last||''))});
     [S.lessons,S.units,S.assignments,S.terms,S.tasks,S.tnotes].forEach(l=>l.forEach(x=>{add(x.title);add(x.name)})); S.tevents.forEach(x=>add(x.title)); S.people.forEach(x=>{add(x.name);add(x.role)});
@@ -5566,9 +5584,11 @@ function tCurWeek(){const T=todayISO(), wd=parse(T).getDay(), ws=tWeekStart(T); 
 // attendance opens on today, or the last school day when there is no school today
 function tAttDay0(){const T=todayISO(); if(tSchoolDay(T)) return T; for(let i=1;i<21;i++){const d=addDays(T,-i); if(tSchoolDay(d)) return d} return T}
 const tLink=(href,txt,cls)=>`<a class="${cls||'linkbtn'}" href="${esc(href)}">${txt}</a>`;
+// whole day names and their usual short forms only, so "month", "monkey" or "wedding" stay part of a title
+const TDAYW=[['sun','sunday'],['mon','monday'],['tue','tues','tuesday'],['wed','weds','wednesday'],['thu','thur','thurs','thursday'],['fri','friday'],['sat','saturday']];
 function tDue(word){
   const T=todayISO(), w=(word||'').toLowerCase(); if(w==='today') return T; if(w==='tomorrow') return addDays(T,1);
-  const days=['sun','mon','tue','wed','thu','fri','sat'], i=days.indexOf(w.slice(0,3)); if(i<0||!/^(sun|mon|tue|wed|thu|fri|sat)[a-z]*$/.test(w)) return '';
+  const i=TDAYW.findIndex(d=>d.includes(w)); if(i<0) return '';
   const n=(i-parse(T).getDay()+7)%7||7; return addDays(T,n);
 }
 
@@ -8570,11 +8590,19 @@ function makeSampleW(){
 }
 
 
+
 /* ---------- free demo: a welcome, a 60-second tour, and an honest way to the full app ---------- */
 const DEMO_KEY=SKP+'.demo';
 const demoState=()=>lsGet(DEMO_KEY,{});
 const demoSave=d=>{try{localStorage.setItem(DEMO_KEY,JSON.stringify(d))}catch(e){}};
-const DEMO=WED?{
+const DEMO=LIFE?{
+  who:'Jess’s example planner', play:'Jess is made up, so tap anything.', hook:'One thing at a time, for brains that hate long lists',
+  perks:[['spark','It picks your next task by how much energy you have'],['repeat','Routines, habits, meals and money in one calm app'],['star','XP, a reward jar and a little garden that grows']],
+  steps:[{k:'act:lspin',t:'Spin for a task',d:'On Today, tap Spin for me and let the wheel pick.',go:'today',sel:'.lone [data-act=lspin]'},
+    {k:'act:ldone',t:'Finish something',d:'Tick any task and watch the confetti and your XP.',go:'today',sel:'.lone [data-act=ldone]'},
+    {k:'act:lgrocery-build',t:'Turn meals into a grocery list',d:'On Meals, tap Make the grocery list.',go:'meals',sel:'[data-act=lgrocery-build]'}],
+  won:'One thing at a time, routines that run step by step and meals that write the grocery list. The full app adds your Home Screen, offline use, sync and calendar reminders.'
+}:WED?{
   who:'Maya and Sam’s example wedding', play:'The guests are made up, so tap anything.', hook:'Plan your wedding together, privately',
   perks:[['wallet','A budget with the real totals, every deposit and every balance'],['people','Guests who answer from a link, straight into your list'],['clock','A day-of schedule your whole wedding party can open']],
   steps:[{k:'act:wpay-paid',t:'Tick off a payment',d:'Open Payments and tap Paid next to one. The budget updates.',go:'wpay'},
@@ -8620,12 +8648,12 @@ function demoBanner(){
   if(V.tab!=='today') return `<div class="banner demo"><div><b>Free demo · ${DEMO.who}</b><p>${DEMO.play}</p></div><div class="acts"><button class="btn small" data-act="start-own">Start my own</button></div></div>`;
   const done=demoState().done||{}, n=DEMO.steps.filter(s=>done[s.k]).length, N=DEMO.steps.length;
   if(n===N) return `<div class="card demotour done"><div class="dt-head"><span class="dstamp" data-notr>TOUR DONE</span></div><h2>You have seen how it works</h2><p>${DEMO.won}</p>
-    <div class="row-end" style="justify-content:flex-start"><button class="btn coral" data-act="demo-get">Get the full app</button><button class="btn ghost" data-act="start-own">${WED?'Try it with my own wedding':TEACH?'Try it with my own classes':'Try it with my own numbers'}</button></div></div>`;
+    <div class="row-end" style="justify-content:flex-start"><button class="btn coral" data-act="demo-get">Get the full app</button><button class="btn ghost" data-act="start-own">${WED?'Try it with my own wedding':TEACH?'Try it with my own classes':LIFE?'Try it with my own planner':'Try it with my own numbers'}</button></div></div>`;
   return `<div class="card demotour"><div class="dt-head"><span class="dstamp" data-notr>FREE DEMO</span><b>Try it in 60 seconds</b><span class="muted">${n} of ${N} done</span></div>
     <div class="dt-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${N}" aria-valuenow="${n}"><i style="width:${n/N*100}%"></i></div>
     <p class="muted" style="font-size:14px">This is the real app with ${DEMO.who}. ${DEMO.play}</p>
     <ol class="dt-steps">${DEMO.steps.map((s,i)=>`<li class="${done[s.k]?'ok':''}"><span class="dt-n" aria-hidden="true">${done[s.k]?'✓':i+1}</span><div class="grow"><b>${s.t}</b><span>${s.d}</span></div>${done[s.k]?'':`<button class="btn small" data-act="demo-show" data-i="${i}">Show me</button>`}</li>`).join('')}</ol>
-    <div class="row-end" style="justify-content:flex-start"><button class="btn small ghost" data-act="start-own">${WED?'Try it with my own wedding':TEACH?'Try it with my own classes':'Try it with my own numbers'}</button></div></div>`;
+    <div class="row-end" style="justify-content:flex-start"><button class="btn small ghost" data-act="start-own">${WED?'Try it with my own wedding':TEACH?'Try it with my own classes':LIFE?'Try it with my own planner':'Try it with my own numbers'}</button></div></div>`;
 }
 function demoWelcome(){
   const d=demoState(); d.seen=1; demoSave(d);
@@ -8635,7 +8663,7 @@ function demoWelcome(){
     <div class="row-end"><button class="btn ghost" data-act="demo-look">Just look around</button><button class="btn coral" data-act="demo-tour">Show me in 60 seconds</button></div></div>`);
 }
 function demoGet(){
-  const unit=PROJ?'tasks':TEACH?'lessons':WED?'guests':'spends';
+  const unit=PROJ||LIFE?'tasks':TEACH?'lessons':WED?'guests':'spends';
   openDlg(`<div class="dlg-head"><h2>Get the full ${esc(PRODUCT.name)}</h2><button class="iconbtn" data-act="close" aria-label="Close">×</button></div>
     <p>Everything you tried here, made yours.</p>
     <table class="dtable"><tr><th></th><th>Demo</th><th>Full</th></tr>
@@ -8679,11 +8707,12 @@ if(postRecurring()) save();
 {const fab=document.querySelector('.fab'); if(fab) fab.innerHTML=icon('plus'); const bm=document.querySelector('.brand-mark'); if(bm) bm.innerHTML='<img src="'+APP_ICON+'" alt="">';
  if(!document.querySelector('link[rel=icon]')){const l=document.createElement('link'); l.rel='icon'; l.href=APP_ICON; document.head.appendChild(l)}}
 const hashTab=(location.hash||'').slice(1);
-if((WED?['today','wcheck','wbudget','wguests','wvend','wday','more','wcal','wpage','wevents','wnotes','wpay','settings']:TEACH?['today','week','classes','attend','grades','tcal','more','subplan','share','ttedit','lessons','tasks','settings']:PROJ?['today','dash','board','money','more','timeline','matrix','pcal','projects','clients','settings']:BUDGET?['today','month','bills','goals','more','spending','income','debt','milestones','dump','settings']:['today','month','trips','map','year','settings']).includes(hashTab)) V.tab=hashTab;
+if((LIFE?['today','tasks','routines','home','meals','money','more','health','goals','journal','cal','fun','settings']:WED?['today','wcheck','wbudget','wguests','wvend','wday','more','wcal','wpage','wevents','wnotes','wpay','settings']:TEACH?['today','week','classes','attend','grades','tcal','more','subplan','share','ttedit','lessons','tasks','settings']:PROJ?['today','dash','board','money','more','timeline','matrix','pcal','projects','clients','settings']:BUDGET?['today','month','bills','goals','more','spending','income','debt','milestones','dump','settings']:['today','month','trips','map','year','settings']).includes(hashTab)) V.tab=hashTab;
 if(BUDGET) budgetBoot();
 if(PROJ) projBoot();
 if(TEACH) teachBoot();
 if(WED) wedBoot();
+if(LIFE) lifeBoot();
 render(); save();
 syncBoot();
 // first visit to the free demo: say what it is and offer the tour
